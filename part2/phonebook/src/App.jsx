@@ -3,12 +3,16 @@ import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
 import personService from "./services/persons";
+import Notification from "./components/Notification";
+import "./App.css";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState(null);
+  const [color, setColor] = useState("red");
 
   useEffect(() => {
     personService.getAll().then((res) => setPersons(res));
@@ -23,15 +27,29 @@ const App = () => {
       );
       if (confirmChange) {
         const changedPerson = { ...alreadyExists[0], number: newNumber };
-        personService.change(changedPerson.id, changedPerson).then(() => {
-          setPersons(
-            persons.map((prev) =>
-              prev.id === changedPerson.id ? changedPerson : prev
-            )
-          );
-          setNewName("");
-          setNewNumber("");
-        });
+        personService
+          .change(changedPerson.id, changedPerson)
+          .then(() => {
+            setPersons(
+              persons.map((prev) =>
+                prev.id === changedPerson.id ? changedPerson : prev
+              )
+            );
+            setNewName("");
+            setNewNumber("");
+            setColor("green");
+            setMessage(`'${newName}' modified successfully!`);
+            setTimeout(() => {
+              setMessage(null);
+            }, 5000);
+          })
+          .catch(() => {
+            setColor("red");
+            setMessage(`Person '${newName}' was already removed from server`);
+            setTimeout(() => {
+              setMessage(null);
+            }, 5000);
+          });
         return;
       }
       return;
@@ -46,6 +64,10 @@ const App = () => {
         setPersons(persons.concat(person));
         setNewName("");
         setNewNumber("");
+        setMessage(`Added '${newName}'`);
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
       });
   };
 
@@ -64,6 +86,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} color={color} />
       <Filter
         value={filter}
         handleFilter={(event) => setFilter(event.target.value)}
