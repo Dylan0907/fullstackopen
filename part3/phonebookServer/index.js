@@ -9,7 +9,21 @@ app.use(cors());
 morgan.token("body", (req) => JSON.stringify(req.body || {}));
 
 app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+  morgan((tokens, req, res) => {
+    let array = [
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens.res(req, res, "content-length"),
+      "-",
+      tokens["response-time"](req, res),
+      "ms"
+    ];
+    if (req.method === "POST") {
+      array.push("- body:", tokens.body(req, res));
+    }
+    return array.join(" ");
+  })
 );
 
 let persons = [
@@ -74,7 +88,24 @@ app.get("/api/persons/:id", (req, res) => {
   }
 });
 
-app.delete("/api/persons:id", (req, res) => {
+app.put("/api/persons/:id", (req, res) => {
+  const id = req.params.id;
+  const body = req.body;
+  if (!body.number) {
+    return res.status(400).json({ error: "Number is required" });
+  }
+  const changedPerson = {
+    name: body.name,
+    number: body.number,
+    id: id
+  };
+  persons = persons.map((person) =>
+    person.id === changedPerson.id ? changedPerson : person
+  );
+  res.json(changedPerson);
+});
+
+app.delete("/api/persons/:id", (req, res) => {
   const id = req.params.id;
   persons = persons.filter((person) => person.id !== id);
   res.status(204).end();

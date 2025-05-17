@@ -57,14 +57,14 @@ const App = () => {
     personService
       .post({
         name: newName,
-        number: newNumber,
-        id: crypto.randomUUID()
+        number: newNumber
       })
       .then((person) => {
         setPersons(persons.concat(person));
         setNewName("");
         setNewNumber("");
         setMessage(`Added '${newName}'`);
+        setColor("green");
         setTimeout(() => {
           setMessage(null);
         }, 5000);
@@ -74,8 +74,8 @@ const App = () => {
   const removePerson = (id, name) => {
     const confirmDelete = window.confirm(`Delete ${name}?`);
     if (confirmDelete)
-      personService.remove(id).then((deletedPerson) => {
-        setPersons(persons.filter((person) => person.id !== deletedPerson.id));
+      personService.remove(id).then(() => {
+        setPersons(persons.filter((person) => person.id !== id));
       });
   };
 
