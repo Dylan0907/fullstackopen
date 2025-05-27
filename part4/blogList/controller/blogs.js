@@ -1,15 +1,13 @@
 const blogsRouter = require("express").Router();
 const Blog = require("../model/blog");
-const User = require("../model/user");
-const jwt = require("jsonwebtoken");
-const config = require("../utils/config");
+const middleware = require("../utils/middleware");
 
 blogsRouter.get("/", async (_request, response) => {
   const blogs = await Blog.find({}).populate("user");
   return response.json(blogs);
 });
 
-blogsRouter.post("/", async (request, response) => {
+blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
   const { author, likes, url, title } = request.body;
 
   const user = await request.user;
@@ -29,38 +27,48 @@ blogsRouter.post("/", async (request, response) => {
   response.status(201).json(newBlog);
 });
 
-blogsRouter.delete("/:id", async (request, response) => {
-  const id = request.params.id;
-  const blog = await Blog.findById(id);
-  if (!blog) {
-    return response
-      .status(404)
-      .json({ error: "there is no blog with that id" });
+blogsRouter.delete(
+  "/:id",
+  middleware.userExtractor,
+  async (request, response) => {
+    const id = request.params.id;
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return response
+        .status(404)
+        .json({ error: "there is no blog with that id" });
+    }
+    const user = request.user;
+
+    if (blog.user.toString() !== user._id.toString()) {
+      return response.status(401).json({ error: "invalid user" });
+    }
+    const filteredBlogs = user.blogs.filter(
+      (blog) => blog._id.toString() !== id
+    );
+    user.blogs = filteredBlogs;
+    await user.save();
+    await blog.deleteOne();
+    response.status(204).end();
   }
-  const user = request.user;
+);
 
-  if (blog.user.toString() !== user._id.toString()) {
-    return response.status(401).json({ error: "invalid user" });
+blogsRouter.put(
+  "/:id",
+  middleware.userExtractor,
+  async (request, response, next) => {
+    const { likes } = request.body;
+    const currentBlog = await Blog.findById(request.params.id);
+
+    if (!currentBlog) {
+      return response.status(404).end();
+    }
+
+    currentBlog.likes = likes;
+
+    const updatedBlog = await currentBlog.save();
+    response.json(updatedBlog);
   }
-  const filteredBlogs = user.blogs.filter((blog) => blog._id.toString() !== id);
-  user.blogs = filteredBlogs;
-  await user.save();
-  await blog.deleteOne();
-  response.status(204).end();
-});
-
-blogsRouter.put("/:id", async (request, response, next) => {
-  const { likes } = request.body;
-  const currentBlog = await Blog.findById(request.params.id);
-
-  if (!currentBlog) {
-    return response.status(404).end();
-  }
-
-  currentBlog.likes = likes;
-
-  const updatedBlog = await currentBlog.save();
-  response.json(updatedBlog);
-});
+);
 
 module.exports = blogsRouter;

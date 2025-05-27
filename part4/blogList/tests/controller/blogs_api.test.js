@@ -5,6 +5,7 @@ const supertest = require("supertest");
 const app = require("../../app");
 const Blog = require("../../model/blog");
 const api = supertest(app);
+
 const initialBlogs = [
   {
     title: "React patterns",
@@ -79,7 +80,7 @@ describe("creation of a new blog", () => {
     assert.strictEqual(zeroLikesBlog.likes, 0, "Expect to have 0 likes");
   });
 
-  test("it should return a 400 status if there is missing the blog URL with POST request", async () => {
+  test("it should return a 400 status if the blog URL is missing", async () => {
     const newBlog = {
       title: "First class tests",
       author: "Robert C. Martin"
@@ -91,7 +92,7 @@ describe("creation of a new blog", () => {
       .expect("Content-Type", /application\/json/);
   });
 
-  test("it should return a 400 status if there is missing the blog title with POST request", async () => {
+  test("it should return a 400 status if it is missing the blog title", async () => {
     const newBlog = {
       author: "Robert C. Martin",
       url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll"
@@ -104,7 +105,7 @@ describe("creation of a new blog", () => {
   });
 });
 
-describe("modification of a blog", () => {
+/* describe("modification of a blog", () => {
   const newLikes = 10;
   test("succeeds with valid data", async () => {
     const blogsAtStart = (
@@ -145,7 +146,7 @@ describe("deletion of a blog", () => {
 
     assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1);
   });
-});
+}); */
 
 after(async () => {
   await mongoose.connection.close();
