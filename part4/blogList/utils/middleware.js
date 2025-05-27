@@ -1,4 +1,5 @@
 const logger = require("./logger");
+const config = require("./config");
 const morgan = require("morgan");
 const jwt = require("jsonwebtoken");
 const User = require("../model/user");
