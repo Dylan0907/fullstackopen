@@ -1,4 +1,4 @@
-import Blog from ".//Blog";
+import Blog from "./Blog";
 import CreateBlog from "./CreateBlog";
 import Togglable from "./Togglable";
 import blogService from "../services/blogs";
