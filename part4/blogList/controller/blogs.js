@@ -53,22 +53,18 @@ blogsRouter.delete(
   }
 );
 
-blogsRouter.put(
-  "/:id",
-  middleware.userExtractor,
-  async (request, response, next) => {
-    const { likes } = request.body;
-    const currentBlog = await Blog.findById(request.params.id);
+blogsRouter.put("/:id", async (request, response, next) => {
+  const { likes } = request.body;
+  const currentBlog = await Blog.findById(request.params.id).populate("user");
 
-    if (!currentBlog) {
-      return response.status(404).end();
-    }
-
-    currentBlog.likes = likes;
-
-    const updatedBlog = await currentBlog.save();
-    response.json(updatedBlog);
+  if (!currentBlog) {
+    return response.status(404).end();
   }
-);
+
+  currentBlog.likes = likes;
+
+  const updatedBlog = await currentBlog.save();
+  response.json(updatedBlog);
+});
 
 module.exports = blogsRouter;

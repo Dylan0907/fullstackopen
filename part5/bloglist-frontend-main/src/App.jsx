@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
-import Blog from "./components/Blog";
+import { useState, useEffect, useRef } from "react";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import Login from "./components/Login";
 import Notification from "./components/Notification";
-import CreateBlog from "./components/CreateBlog";
+import BlogPanel from "./components/BlogPanel";
 import "./App.css";
 
 const App = () => {
@@ -13,9 +12,17 @@ const App = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const [user, setUser] = useState(null);
+  const blogFormRef = useRef();
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService
+      .getAll()
+      .then((blogs) =>
+        blogs.sort((a, b) => {
+          return b.likes - a.likes;
+        })
+      )
+      .then((sortedBlogs) => setBlogs(sortedBlogs));
   }, []);
 
   useEffect(() => {
@@ -55,12 +62,13 @@ const App = () => {
 
   const addBlog = async (newBlog) => {
     try {
-      const createdBog = await blogService.create(newBlog);
+      const createdBlog = await blogService.create(newBlog);
+      blogFormRef.current.toggleVisibility();
       setMessage({
         text: `A new blog You're not going to need it! by ${user.name}`,
         color: "green"
       });
-      setBlogs(blogs.concat(createdBog));
+      setBlogs(blogs.concat(createdBlog));
       setTimeout(() => {
         setMessage(null);
       }, 5000);
@@ -76,15 +84,14 @@ const App = () => {
     <div>
       <Notification message={message} />
       {user ? (
-        <>
-          <h1>Blogs</h1>
-          <p>{`${user.name} logged in`}</p>
-          <button onClick={() => handleLogout()}>logout</button>
-          <CreateBlog addBlog={addBlog} />
-          {blogs.map((blog) => (
-            <Blog key={blog.id} blog={blog} />
-          ))}
-        </>
+        <BlogPanel
+          blogs={blogs}
+          user={user}
+          addBlog={addBlog}
+          handleLogout={handleLogout}
+          blogFormRef={blogFormRef}
+          setBlogs={setBlogs}
+        />
       ) : (
         <>
           <Login
