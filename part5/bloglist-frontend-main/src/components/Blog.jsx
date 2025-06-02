@@ -13,19 +13,17 @@ const Blog = ({ blog, handleLikes, user, handleRemove }) => {
   const toggleVisibility = () => {
     setVisible(!visible);
   };
-
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className="blog">
       <div>
-        <p>
-          {blog.title} {blog.author}
-        </p>
+        <p className="blog__title">{blog.title}</p>
+        <p className="blog__author">{blog.author}</p>
         <button onClick={toggleVisibility}>{visible ? "hide" : "view"}</button>
       </div>
       {visible && (
         <div>
-          <p>{blog.url}</p>
-          <p>likes {blog.likes}</p>
+          <p className="blog__url">{blog.url}</p>
+          <p className="blog__likes">likes {blog.likes}</p>
           <button onClick={() => handleLikes(blog.id, blog.likes)}>Like</button>
           <p>{blog.user.name}</p>
           {blog.user.username === user.username && (
