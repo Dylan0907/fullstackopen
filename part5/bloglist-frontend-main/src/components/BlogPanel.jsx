@@ -33,7 +33,7 @@ const BlogPanel = ({
         <p>{`${user.name} logged in`}</p>
         <button onClick={() => handleLogout()}>logout</button>
       </div>
-      <Togglable buttonLabel={"new Blog"} ref={blogFormRef}>
+      <Togglable buttonLabel={"New Blog"} ref={blogFormRef}>
         <CreateBlog addBlog={addBlog} setBlogs={setBlogs} />
       </Togglable>
       <div>

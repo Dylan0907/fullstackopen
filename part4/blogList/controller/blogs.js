@@ -22,8 +22,14 @@ blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
   });
 
   const newBlog = await blog.save();
+
   user.blogs = user.blogs.concat(newBlog._id);
   await user.save();
+  await newBlog.populate("user", {
+    username: 1,
+    name: 1
+  });
+
   response.status(201).json(newBlog);
 });
 
