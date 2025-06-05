@@ -7,9 +7,7 @@ const AnecdoteForm = () => {
   const addNewAnecdote = (e) => {
     e.preventDefault();
     dispatch(createAnecdote(e.target.newAnecdote.value));
-
     e.target.newAnecdote.value = "";
-    console.log(e.target.newAnecdote.value);
   };
 
   return (
