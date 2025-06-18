@@ -2,6 +2,7 @@ import Blog from "./Blog";
 import CreateBlog from "./CreateBlog";
 import Togglable from "./Togglable";
 import blogService from "../services/blogs";
+import { useNotificationDispatch } from "../context/NotificationContext";
 
 const BlogPanel = ({
   blogs,
@@ -11,9 +12,11 @@ const BlogPanel = ({
   blogFormRef,
   setBlogs
 }) => {
+  const dispatch = useNotificationDispatch();
   const handleLikes = async (blogId, blogLikes) => {
     const updatedBlog = await blogService.addLike(blogId, blogLikes + 1);
-
+    dispatch({ type: "SUCCESS_NOTIFICATION", text: "blog voted!" });
+    setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
     setBlogs(
       blogs.map((blog) => (updatedBlog.id === blog.id ? updatedBlog : blog))
     );
@@ -23,7 +26,12 @@ const BlogPanel = ({
     try {
       await blogService.remove(blogId);
       setBlogs(blogs.filter((blog) => blog.id !== blogId));
-    } catch (exception) {}
+      dispatch({ type: "SUCCESS_NOTIFICATION", text: "blog removed!" });
+      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
+    } catch (exception) {
+      dispatch({ type: "ERROR_NOTIFICATION", text: "Could not remove blog" });
+      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
+    }
   };
 
   return (
