@@ -1,39 +1,29 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import Login from "./components/Login";
 import Notification from "./components/Notification";
 import BlogPanel from "./components/BlogPanel";
 import { useNotificationDispatch } from "./context/NotificationContext";
+import { useUserDispatch, useUserValue } from "./context/UserContext";
+import { useQuery } from "@tanstack/react-query";
 import "./App.css";
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
-  const blogFormRef = useRef();
-  const dispatch = useNotificationDispatch();
 
-  useEffect(() => {
-    blogService
-      .getAll()
-      .then((blogs) =>
-        blogs.sort((a, b) => {
-          return b.likes - a.likes;
-        })
-      )
-      .then((sortedBlogs) => setBlogs(sortedBlogs));
-  }, []);
+  const dispatchNotification = useNotificationDispatch();
+  const dispatchUser = useUserDispatch();
+  const user = useUserValue();
 
-  useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON);
-      setUser(user);
-      blogService.setToken(user.token);
-    }
-  }, []);
+  const result = useQuery({
+    queryKey: ["blogs"],
+    queryFn: blogService.getAll,
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
+  console.log(JSON.parse(JSON.stringify(result)));
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -44,42 +34,38 @@ const App = () => {
       });
       blogService.setToken(user.token);
       window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
-      setUser(user);
+      dispatchUser({ type: "SET_USER", user });
       setUsername("");
       setPassword("");
     } catch (exception) {
-      dispatch({
+      dispatchNotification({
         type: "ERROR_NOTIFICATION",
         text: "Wrong username or password"
       });
-      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
+      setTimeout(
+        () => dispatchNotification({ type: "CLEAR_NOTIFICATION" }),
+        5000
+      );
     }
   };
 
   const handleLogout = () => {
-    setUser(null);
+    dispatchUser({ type: "LOGOUT_USER" });
     blogService.setToken(null);
-    window.localStorage.clear();
+    window.localStorage.removeItem("loggedBlogappUser");
   };
 
-  const addBlog = async (newBlog) => {
-    try {
-      const createdBlog = await blogService.create(newBlog);
-      blogFormRef.current.toggleVisibility();
-      setBlogs(blogs.concat(createdBlog));
-      dispatch({
-        text: `A new blog You're not going to need it! by ${user.name}`,
-        type: "SUCCESS_NOTIFICATION"
-      });
-      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
-    } catch (exception) {
-      dispatch({
-        text: "Could not create a new blog",
-        type: "ERROR_NOTIFICATION"
-      });
-      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
-    }
-  };
+  if (result.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (result.isError) {
+    return <div>Blogs service not available due to problems in server</div>;
+  }
+
+  const blogs = result.data.sort((a, b) => {
+    return b.likes - a.likes;
+  });
 
   return (
     <div>
@@ -88,10 +74,9 @@ const App = () => {
         <BlogPanel
           blogs={blogs}
           user={user}
-          addBlog={addBlog}
           handleLogout={handleLogout}
-          blogFormRef={blogFormRef}
-          setBlogs={setBlogs}
+
+          /* setBlogs={setBlogs} */
         />
       ) : (
         <>

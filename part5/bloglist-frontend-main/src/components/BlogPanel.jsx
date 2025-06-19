@@ -1,38 +1,52 @@
+import { useRef } from "react";
 import Blog from "./Blog";
 import CreateBlog from "./CreateBlog";
 import Togglable from "./Togglable";
 import blogService from "../services/blogs";
 import { useNotificationDispatch } from "../context/NotificationContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const BlogPanel = ({
-  blogs,
-  user,
-  addBlog,
-  handleLogout,
-  blogFormRef,
-  setBlogs
-}) => {
+const BlogPanel = ({ blogs, user, handleLogout }) => {
   const dispatch = useNotificationDispatch();
-  const handleLikes = async (blogId, blogLikes) => {
-    const updatedBlog = await blogService.addLike(blogId, blogLikes + 1);
-    dispatch({ type: "SUCCESS_NOTIFICATION", text: "blog voted!" });
-    setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
-    setBlogs(
-      blogs.map((blog) => (updatedBlog.id === blog.id ? updatedBlog : blog))
-    );
-  };
+  const queryClient = useQueryClient();
+  const blogFormRef = useRef();
 
-  const handleRemove = async (blogId) => {
-    try {
-      await blogService.remove(blogId);
-      setBlogs(blogs.filter((blog) => blog.id !== blogId));
-      dispatch({ type: "SUCCESS_NOTIFICATION", text: "blog removed!" });
+  const voteBlogMutation = useMutation({
+    mutationFn: blogService.addLike,
+    onSuccess: (updatedBlog) => {
+      const blogs = queryClient.getQueryData(["blogs"]);
+      queryClient.setQueryData(
+        ["blogs"],
+        blogs.map((blog) => (updatedBlog.id === blog.id ? updatedBlog : blog))
+      );
+      dispatch({ type: "SUCCESS_NOTIFICATION", text: "blog voted!" });
       setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
-    } catch (exception) {
+    },
+    onError: (e) => {
+      dispatch({ type: "ERROR_NOTIFICATION", text: "Could not vote blog" });
+      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
+    }
+  });
+
+  const deleteBlogMutation = useMutation({
+    mutationFn: blogService.remove,
+    onSuccess: (data, blogId) => {
+      const blogs = queryClient.getQueryData(["blogs"]);
+      queryClient.setQueryData(
+        ["blogs"],
+        blogs.filter((blog) => blog.id !== blogId)
+      );
+      dispatch({
+        text: `the blog was deleted successfully!`,
+        type: "SUCCESS_NOTIFICATION"
+      });
+      setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
+    },
+    onError: (e) => {
       dispatch({ type: "ERROR_NOTIFICATION", text: "Could not remove blog" });
       setTimeout(() => dispatch({ type: "CLEAR_NOTIFICATION" }), 5000);
     }
-  };
+  });
 
   return (
     <>
@@ -42,16 +56,21 @@ const BlogPanel = ({
         <button onClick={() => handleLogout()}>logout</button>
       </div>
       <Togglable buttonLabel={"New Blog"} ref={blogFormRef}>
-        <CreateBlog addBlog={addBlog} setBlogs={setBlogs} />
+        <CreateBlog blogFormRef={blogFormRef} />
       </Togglable>
       <div>
         {blogs.map((blog) => (
           <Blog
             key={blog.id}
             blog={blog}
-            handleLikes={handleLikes}
+            handleLikes={() =>
+              voteBlogMutation.mutate({
+                blogId: blog.id,
+                likes: blog.likes + 1
+              })
+            }
             user={user}
-            handleRemove={handleRemove}
+            handleRemove={() => deleteBlogMutation.mutate(blog.id)}
           />
         ))}
       </div>

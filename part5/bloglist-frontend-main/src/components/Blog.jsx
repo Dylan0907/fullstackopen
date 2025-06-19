@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+
 const Blog = ({ blog, handleLikes, user, handleRemove }) => {
   const [visible, setVisible] = useState(false);
   const blogStyle = {
@@ -13,6 +14,7 @@ const Blog = ({ blog, handleLikes, user, handleRemove }) => {
   const toggleVisibility = () => {
     setVisible(!visible);
   };
+
   return (
     <div style={blogStyle} className="blog">
       <div>
