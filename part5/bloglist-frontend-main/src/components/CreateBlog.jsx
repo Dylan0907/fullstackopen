@@ -53,42 +53,66 @@ const CreateBlog = ({ blogFormRef }) => {
   };
 
   return (
-    <>
-      <h2>Create new</h2>
-      <form onSubmit={handleNewBlog}>
+    <div className="max-w-md mx-auto bg-white p-6 rounded shadow-md">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Create new</h2>
+      <form onSubmit={handleNewBlog} className="space-y-4">
         <div>
-          <label htmlFor="title">Title</label>
+          <label
+            htmlFor="title"
+            className="block mb-1 font-medium text-gray-700"
+          >
+            Title
+          </label>
           <input
             id="title"
-            type="text"
             name="title"
+            type="text"
             value={newBlog.title}
             onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
           />
         </div>
         <div>
-          <label htmlFor="author">Author</label>
+          <label
+            htmlFor="author"
+            className="block mb-1 font-medium text-gray-700"
+          >
+            Author
+          </label>
           <input
             id="author"
-            type="text"
             name="author"
+            type="text"
             value={newBlog.author}
             onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
           />
         </div>
         <div>
-          <label htmlFor="url">URL</label>
+          <label htmlFor="url" className="block mb-1 font-medium text-gray-700">
+            URL
+          </label>
           <input
             id="url"
-            type="text"
             name="url"
+            type="text"
             value={newBlog.url}
             onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
           />
         </div>
-        <button type="submit">create</button>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition"
+          disabled={newBlogMutation.isLoading}
+        >
+          {newBlogMutation.isLoading ? "Creating..." : "Create"}
+        </button>
       </form>
-    </>
+    </div>
   );
 };
 

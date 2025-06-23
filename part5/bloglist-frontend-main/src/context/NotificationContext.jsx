@@ -3,9 +3,9 @@ import { createContext, useReducer, useContext } from "react";
 const notificationReducer = (state, action) => {
   switch (action.type) {
     case "SUCCESS_NOTIFICATION":
-      return { text: action.text, color_text: "green" };
+      return { text: action.text, type: "success" };
     case "ERROR_NOTIFICATION":
-      return { text: action.text, color_text: "red" };
+      return { text: action.text, type: "error" };
     case "CLEAR_NOTIFICATION":
       return null;
     default:

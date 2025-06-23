@@ -11,29 +11,44 @@ const Blog = ({ handleLikes, blogs, handleRemove, user }) => {
   const blog = blogs.find((blog) => blog.id === id);
 
   return (
-    <div className="blog">
-      <h2 className="blog__title">{blog.title}</h2>
-      <p className="blog__author">{blog.author}</p>
-      <a className="blog__url" href={blog.url}>
+    <div className="bg-white max-w-3xl mx-auto p-6 shadow-md rounded space-y-4">
+      <h2 className="text-2xl font-bold text-gray-800">{blog.title}</h2>
+      <p className="text-gray-600">by {blog.author}</p>
+
+      <a
+        className="text-blue-600 hover:underline break-words"
+        href={blog.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {blog.url}
       </a>
-      <div>
-        <p className="blog__likes">likes {blog.likes}</p>
+
+      <div className="flex items-center space-x-4">
+        <p className="text-gray-700">Likes: {blog.likes}</p>
         <button
           onClick={() =>
             handleLikes({ blogId: blog.id, likes: blog.likes + 1 })
           }
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
         >
           Like
         </button>
       </div>
+
       {blog.user.username === user.username && (
-        <button onClick={() => handleRemove({ id: blog.id })}>remove</button>
+        <button
+          onClick={() => handleRemove({ id: blog.id })}
+          className="text-red-600 hover:underline text-sm"
+        >
+          Remove
+        </button>
       )}
-      <div>
-        <h3>Comments</h3>
-        <CommentForm blogId={id} />
-        <ul>
+
+      <div className="pt-4">
+        <h3 className="text-lg font-semibold text-gray-800">Comments</h3>
+        <CommentForm blogId={blog.id} />
+        <ul className="mt-4 space-y-2 list-disc list-inside text-gray-700">
           {blog.comments.map((comment, index) => (
             <li key={index}>{comment}</li>
           ))}
@@ -73,17 +88,28 @@ const CommentForm = ({ blogId }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="comment">Add a comment:</label>
-      <br />
+    <form onSubmit={handleSubmit} className="mt-6 space-y-3 w-1/3">
+      <label
+        htmlFor="comment"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Add a comment:
+      </label>
       <input
         type="text"
         id="comment"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         required
+        className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Write your comment..."
       />
-      <button type="submit">Submit</button>
+      <button
+        type="submit"
+        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded"
+      >
+        Submit
+      </button>
     </form>
   );
 };

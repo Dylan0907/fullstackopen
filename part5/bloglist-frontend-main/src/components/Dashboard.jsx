@@ -1,6 +1,5 @@
 import Blog from "./Blog";
 import BlogPanel from "./BlogPanel";
-import Navigation from "./Navigation";
 import blogService from "../services/blogs";
 import userService from "../services/users";
 import IndividualUserView from "./IndividualUserView";
@@ -12,7 +11,6 @@ import { Routes, Route, useNavigate, Link } from "react-router-dom";
 const Dashboard = ({ blogs, user }) => {
   const dispatch = useNotificationDispatch();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const result = useQuery({
     queryKey: ["users"],
@@ -70,8 +68,10 @@ const Dashboard = ({ blogs, user }) => {
 
   return (
     <>
-      <Navigation user={user} />
-      <h1>Blogs</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6 mt-3 text-center">
+        Blogs
+      </h1>
+
       <Routes>
         <Route path="/users" element={<UsersView users={users} />} />
         <Route

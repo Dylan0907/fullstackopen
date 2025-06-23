@@ -1,6 +1,7 @@
 import blogService from "./services/blogs";
 import Login from "./components/Login";
 import Notification from "./components/Notification";
+import Navigation from "./components/Navigation";
 import CreateUserPage from "./components/CreateUserPage";
 import Dashboard from "./components/Dashboard";
 import { useUserValue } from "./context/UserContext";
@@ -32,11 +33,15 @@ const App = () => {
 
   return (
     <div>
-      <Notification />
       {user ? (
-        <Dashboard blogs={blogs} user={user} />
+        <div>
+          <Navigation user={user} />
+          <Notification />
+          <Dashboard blogs={blogs} user={user} />
+        </div>
       ) : (
         <>
+          <Notification />
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/createUser" element={<CreateUserPage />} />
