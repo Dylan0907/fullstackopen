@@ -25,11 +25,18 @@ const addLike = async ({ blogId, likes }) => {
   return response.data;
 };
 
-const remove = async (id) => {
+const addComment = async ({ blogId, comment }) => {
+  const response = await axios.post(`${baseUrl}/${blogId}/comments`, {
+    comment
+  });
+  return response.data;
+};
+
+const remove = async ({ id }) => {
   const config = {
     headers: { Authorization: token }
   };
   await axios.delete(`${baseUrl}/${id}`, config);
 };
 
-export default { getAll, addLike, create, setToken, remove };
+export default { getAll, addLike, addComment, create, setToken, remove };

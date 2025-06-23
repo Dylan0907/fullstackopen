@@ -17,6 +17,7 @@ const CreateBlog = ({ blogFormRef }) => {
     onSuccess: (newBlog) => {
       const blogs = queryClient.getQueryData(["blogs"]);
       queryClient.setQueryData(["blogs"], blogs.concat(newBlog));
+      queryClient.invalidateQueries(["users"]);
       dispatch({
         text: `A new blog You're not going to need it!`,
         type: "SUCCESS_NOTIFICATION"
