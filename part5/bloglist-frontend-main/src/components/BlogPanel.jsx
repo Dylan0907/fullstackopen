@@ -1,53 +1,35 @@
-import Blog from "./Blog";
+import { useRef } from "react";
 import CreateBlog from "./CreateBlog";
 import Togglable from "./Togglable";
-import blogService from "../services/blogs";
+import { Link } from "react-router-dom";
 
-const BlogPanel = ({
-  blogs,
-  user,
-  addBlog,
-  handleLogout,
-  blogFormRef,
-  setBlogs
-}) => {
-  const handleLikes = async (blogId, blogLikes) => {
-    const updatedBlog = await blogService.addLike(blogId, blogLikes + 1);
-
-    setBlogs(
-      blogs.map((blog) => (updatedBlog.id === blog.id ? updatedBlog : blog))
-    );
-  };
-
-  const handleRemove = async (blogId) => {
-    try {
-      await blogService.remove(blogId);
-      setBlogs(blogs.filter((blog) => blog.id !== blogId));
-    } catch (exception) {}
-  };
-
+const BlogPanel = ({ blogs }) => {
+  const blogFormRef = useRef();
   return (
-    <>
-      <h1>Blogs</h1>
-      <div>
-        <p>{`${user.name} logged in`}</p>
-        <button onClick={() => handleLogout()}>logout</button>
-      </div>
-      <Togglable buttonLabel={"New Blog"} ref={blogFormRef}>
-        <CreateBlog addBlog={addBlog} setBlogs={setBlogs} />
+    <div className="max-w-4xl mx-auto mt-8 px-4">
+      <Togglable buttonLabel="Create new" ref={blogFormRef}>
+        <CreateBlog blogFormRef={blogFormRef} />
       </Togglable>
-      <div>
-        {blogs.map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            handleLikes={handleLikes}
-            user={user}
-            handleRemove={handleRemove}
-          />
-        ))}
-      </div>
-    </>
+
+      <BlogList blogs={blogs} />
+    </div>
+  );
+};
+
+const BlogList = ({ blogs }) => {
+  return (
+    <div className="mt-6 space-y-4">
+      {blogs.map((blog) => (
+        <p key={blog.id} className="text-lg">
+          <Link
+            to={`/blogs/${blog.id}`}
+            className="text-blue-600 hover:underline"
+          >
+            {blog.title}
+          </Link>
+        </p>
+      ))}
+    </div>
   );
 };
 

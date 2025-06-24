@@ -1,6 +1,5 @@
 import { createAnecdote } from "../utils/requests";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useContext } from "react";
 import { useNotificationDispatch } from "../context/NotificationContext";
 
 const getId = () => (100000 * Math.random()).toFixed(0);

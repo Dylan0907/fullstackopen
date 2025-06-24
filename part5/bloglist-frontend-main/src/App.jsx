@@ -1,106 +1,51 @@
-import { useState, useEffect, useRef } from "react";
 import blogService from "./services/blogs";
-import loginService from "./services/login";
 import Login from "./components/Login";
 import Notification from "./components/Notification";
-import BlogPanel from "./components/BlogPanel";
+import Navigation from "./components/Navigation";
+import CreateUserPage from "./components/CreateUserPage";
+import Dashboard from "./components/Dashboard";
+import { useUserValue } from "./context/UserContext";
+import { useQuery } from "@tanstack/react-query";
 import "./App.css";
-
+import { Route, Routes } from "react-router-dom";
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState(null);
-  const [user, setUser] = useState(null);
-  const blogFormRef = useRef();
+  const user = useUserValue();
 
-  useEffect(() => {
-    blogService
-      .getAll()
-      .then((blogs) =>
-        blogs.sort((a, b) => {
-          return b.likes - a.likes;
-        })
-      )
-      .then((sortedBlogs) => setBlogs(sortedBlogs));
-  }, []);
+  const result = useQuery({
+    queryKey: ["blogs"],
+    queryFn: blogService.getAll,
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
+  console.log(JSON.parse(JSON.stringify(result)));
 
-  useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON);
-      setUser(user);
-      blogService.setToken(user.token);
-    }
-  }, []);
+  if (result.isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    try {
-      const user = await loginService.login({
-        username,
-        password
-      });
-      blogService.setToken(user.token);
-      window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
-      setUser(user);
-      setUsername("");
-      setPassword("");
-    } catch (exception) {
-      setMessage({ text: "Wrong username or password", color: "red" });
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
-    }
-  };
+  if (result.isError) {
+    return <div>Blogs service not available due to problems in server</div>;
+  }
 
-  const handleLogout = () => {
-    setUser(null);
-    blogService.setToken(null);
-    window.localStorage.clear();
-  };
-
-  const addBlog = async (newBlog) => {
-    try {
-      const createdBlog = await blogService.create(newBlog);
-      blogFormRef.current.toggleVisibility();
-      setMessage({
-        text: `A new blog You're not going to need it! by ${user.name}`,
-        color: "green"
-      });
-      setBlogs(blogs.concat(createdBlog));
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
-    } catch (exception) {
-      setMessage({ text: "Could not create a new blog", color: "red" });
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
-    }
-  };
+  const blogs = result.data.sort((a, b) => {
+    return b.likes - a.likes;
+  });
 
   return (
     <div>
-      <Notification message={message} />
       {user ? (
-        <BlogPanel
-          blogs={blogs}
-          user={user}
-          addBlog={addBlog}
-          handleLogout={handleLogout}
-          blogFormRef={blogFormRef}
-          setBlogs={setBlogs}
-        />
+        <div>
+          <Navigation user={user} />
+          <Notification />
+          <Dashboard blogs={blogs} user={user} />
+        </div>
       ) : (
         <>
-          <Login
-            username={username}
-            setUsername={setUsername}
-            handleLogin={handleLogin}
-            password={password}
-            setPassword={setPassword}
-          />
+          <Notification />
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/createUser" element={<CreateUserPage />} />
+          </Routes>
         </>
       )}
     </div>
