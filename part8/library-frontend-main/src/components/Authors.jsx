@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EDIT_AUTHOR, ALL_AUTHORS } from "../queries/queries";
+import { EDIT_AUTHOR } from "../queries/queries";
 import { useMutation } from "@apollo/client";
 
 const Authors = (props) => {
@@ -27,7 +27,7 @@ const Authors = (props) => {
           ))}
         </tbody>
       </table>
-      <SetBirthyear authors={authors} />
+      {props.token && <SetBirthyear authors={authors} />}
     </div>
   );
 };
@@ -49,6 +49,7 @@ const SetBirthyear = ({ authors }) => {
     setYear("");
     setSelectedAuthor("");
   };
+
   return (
     <div>
       <h3>Set birthyear</h3>
@@ -60,6 +61,7 @@ const SetBirthyear = ({ authors }) => {
               value={selectedAuthor}
               onChange={(e) => setSelectedAuthor(e.target.value)}
             >
+              <option value="">--Please choose an option--</option>
               {authors.map((author) => (
                 <option key={author.name} value={author.name}>
                   {author.name}

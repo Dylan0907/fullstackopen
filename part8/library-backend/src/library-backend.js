@@ -220,7 +220,14 @@ const resolvers = {
     }
   },
   Author: {
-    bookCount: async (root) => await Book.find({ author: root._id }).count()
+    bookCount: async (root) => {
+      try {
+        return await Book.countDocuments({ author: root._id });
+      } catch (error) {
+        console.error("Error in bookCount:", error.message);
+        throw new GraphQLError("Failed to count books for author");
+      }
+    }
   }
 };
 
