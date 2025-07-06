@@ -1,78 +1,22 @@
-const { ApolloServer } = require("@apollo/server");
-const { startStandaloneServer } = require("@apollo/server/standalone");
-const mongoose = require("mongoose");
 const { GraphQLError } = require("graphql");
-const jwt = require("jsonwebtoken");
-
-mongoose.set("strictQuery", false);
 const Book = require("./models/book");
 const Author = require("./models/author");
 const User = require("./models/user");
+const jwt = require("jsonwebtoken");
+const { PubSub } = require("graphql-subscriptions");
+const pubsub = new PubSub();
 
-require("dotenv").config();
+const getBookCounts = async () => {
+  const result = await Book.aggregate([
+    { $group: { _id: "$author", count: { $sum: 1 } } }
+  ]);
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-console.log("connecting to", MONGODB_URI);
-
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log("connected to MongoDB");
-  })
-  .catch((error) => {
-    console.log("error connection to MongoDB:", error.message);
+  const countsMap = {};
+  result.forEach((entry) => {
+    countsMap[entry._id.toString()] = entry.count;
   });
-
-const typeDefs = `
-  type User {
-    username: String!
-    favoriteGenre: String!
-    id: ID!
-  }
-    
-  type Token {
-    value: String!
-  }
-
-  type Book {
-    title: String!
-    published: Int!
-    author: Author!
-    id: ID!
-    genres: [String!]!
-  }
-
-  type Author {
-    name: String!
-    id: ID!
-    born: Int
-    bookCount: Int
-  }
-
-  type Query {
-    authorCount: Int!
-    bookCount: Int!
-    allBooks(author: String, genre: String): [Book!]!
-    allAuthors: [Author!]!
-    me:User
-  }
-
-  type Mutation {
-    addBook(
-      title: String!
-      published: Int!
-      author: String!
-      genres: [String!]!
-    ): Book
-    editAuthor(name: String!, setBornTo: Int!) : Author
-    createUser(username: String!, favoriteGenre: String!): User
-    login(
-      username: String!
-      password: String!
-    ): Token
-  }
-`;
+  return countsMap;
+};
 
 const resolvers = {
   Query: {
@@ -137,6 +81,9 @@ const resolvers = {
         const newBook = new Book({ ...args, author: author._id });
 
         await newBook.save();
+
+        pubsub.publish("BOOK_ADDED", { bookAdded: newBook });
+
         return newBook;
       } catch (e) {
         if (e.name === "ValidationError") {
@@ -147,7 +94,7 @@ const resolvers = {
             }
           });
         }
-        throw error;
+        throw e;
       }
     },
     editAuthor: async (root, args, context) => {
@@ -163,6 +110,12 @@ const resolvers = {
 
       try {
         const author = await Author.findOne({ name: args.name });
+
+        if (!author) {
+          throw new GraphQLError("Author not found", {
+            extensions: { code: "BAD_USER_INPUT" }
+          });
+        }
 
         author.born = args.setBornTo;
 
@@ -214,42 +167,24 @@ const resolvers = {
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) };
     }
   },
+  Subscription: {
+    bookAdded: {
+      subscribe: () => pubsub.asyncIterableIterator("BOOK_ADDED")
+    }
+  },
   Book: {
     author: async (root) => {
       return await Author.findById(root.author);
     }
   },
   Author: {
-    bookCount: async (root) => {
-      try {
-        return await Book.countDocuments({ author: root._id });
-      } catch (error) {
-        console.error("Error in bookCount:", error.message);
-        throw new GraphQLError("Failed to count books for author");
+    bookCount: async (author, args, context) => {
+      if (!context.bookCounts) {
+        context.bookCounts = await getBookCounts();
       }
+      return context.bookCounts[author._id.toString()] || 0;
     }
   }
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers
-});
-
-startStandaloneServer(server, {
-  listen: { port: process.env.PORT },
-  context: async ({ req, res }) => {
-    const auth = req ? req.headers.authorization : null;
-
-    if (auth && auth.startsWith("Bearer ")) {
-      const decodedToken = jwt.verify(
-        auth.substring(7),
-        process.env.JWT_SECRET
-      );
-      const currentUser = await User.findById(decodedToken.id);
-      return { currentUser };
-    }
-  }
-}).then(({ url }) => {
-  console.log(`Server ready at ${url}`);
-});
+module.exports = resolvers;

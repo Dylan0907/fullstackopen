@@ -4,8 +4,13 @@ import Books from "./components/Books";
 import NewBook from "./components/NewBook";
 import LoginForm from "./components/LoginForm";
 import Recommended from "./components/Recommended";
-import { useQuery, useApolloClient } from "@apollo/client";
-import { ALL_AUTHORS, ME } from "./queries/queries";
+import { useQuery, useApolloClient, useSubscription } from "@apollo/client";
+import {
+  ALL_AUTHORS,
+  BOOK_ADDED,
+  ALL_BOOKS,
+  BOOKS_BY_GENRE
+} from "./queries/queries";
 
 const App = () => {
   const [page, setPage] = useState("authors");
@@ -13,6 +18,17 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const result = useQuery(ALL_AUTHORS);
   const client = useApolloClient();
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data, client }) => {
+      const addedBook = data.data.bookAdded;
+      notify(`${addedBook.title} added`);
+
+      client.refetchQueries({
+        include: [ALL_BOOKS, ALL_AUTHORS, BOOKS_BY_GENRE]
+      });
+    }
+  });
 
   useEffect(() => {
     const savedToken = localStorage.getItem("books-user-token");
