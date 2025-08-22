@@ -3,7 +3,7 @@ type bmiCalculatorValues = {
   value2: number;
 };
 
-const parseArgumentsBmi = (args: string[]): bmiCalculatorValues => {
+export const parseArgumentsBmi = (args: string[]): bmiCalculatorValues => {
   if (args.length < 4) throw new Error("Not enough arguments");
   if (args.length > 4) throw new Error("Too many arguments");
   if (!isNaN(Number(args[2])) && !isNaN(Number(args[3]))) {
@@ -17,7 +17,7 @@ const parseArgumentsBmi = (args: string[]): bmiCalculatorValues => {
 };
 
 // Function to calculate BMI and return the weight category
-const calculateBmi = (heightCm: number, weightKg: number): string => {
+export const calculateBmi = (heightCm: number, weightKg: number): string => {
   if (heightCm <= 0 || weightKg <= 0) {
     return "Invalid input: height and weight must be positive numbers.";
   }
