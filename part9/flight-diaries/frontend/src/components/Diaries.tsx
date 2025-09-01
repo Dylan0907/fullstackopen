@@ -1,16 +1,16 @@
-import type { FlightDiaries } from "../types";
+import type { FlightDiary } from "../types";
 
 interface DiariesProps {
-  diaries: FlightDiaries[];
+  diaries: FlightDiary[];
 }
 interface DairyProps {
-  diary: FlightDiaries;
+  diary: FlightDiary;
 }
 const Diaries = ({ diaries }: DiariesProps) => {
   return (
     <div>
       <h3>Diary Entries</h3>
-      {diaries.map((diary: FlightDiaries) => {
+      {diaries.map((diary: FlightDiary) => {
         return <Diary diary={diary} key={diary.id} />;
       })}
     </div>
