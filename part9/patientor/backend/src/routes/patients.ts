@@ -38,7 +38,9 @@ router.post("/", (req, res) => {
 router.post("/:id/entries", (req, res) => {
   try {
     const patientId = req.params.id;
+
     const newEntry = toNewEntry(req.body);
+
     const updatedPatient = patientService.addEntry(patientId, newEntry);
     res.json(updatedPatient);
   } catch (error: unknown) {

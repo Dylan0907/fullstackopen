@@ -5,8 +5,9 @@ import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import TransgenderIcon from "@mui/icons-material/Transgender";
 
-import { Gender, Patient } from "../../types";
+import { Entry, Gender, Patient } from "../../types";
 import Entries from "./Entries";
+import { AddEntryForm } from "./AddEntryForm";
 
 const PatientPersonalInfo = () => {
   let { patientId } = useParams();
@@ -32,6 +33,11 @@ const PatientPersonalInfo = () => {
         return null;
     }
   };
+  const onEntryAdded = (newEntry: Entry) => {
+    if (patient) {
+      patient?.entries.push(newEntry);
+    }
+  };
 
   return (
     <div>
@@ -43,6 +49,7 @@ const PatientPersonalInfo = () => {
         <p>ssh: {patient?.ssn}</p>
         <p>Ocuppation: {patient?.occupation}</p>
       </div>
+      <AddEntryForm patientId={patient?.id} onEntryAdded={onEntryAdded} />
       <Entries entries={patient?.entries} />
     </div>
   );

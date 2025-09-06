@@ -6,8 +6,6 @@ interface EntriesProps {
 }
 
 const Entries = ({ entries }: EntriesProps) => {
-  console.log(entries);
-
   return (
     <div>
       <h3>Entries</h3>
